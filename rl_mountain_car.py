@@ -3,10 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-# my QUESTION s:
-# - What's the variable "done"?
-# - What does determine the episode duration?
-
 # NOTE:
 # - With initial exploration, 1st achievement at the ~450th episode.
 # - Without it, 1st achievement at the ~1000th episode.
@@ -16,22 +12,18 @@ env = gym.make("MountainCar-v0")
 # metrics
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95     # weight.  Shows how important is future reward over current reward.
-EPISODES = 4000     # Each episode lasts a specific time. It's actually how many trials it will attempt. (Tutorial's value 25000)
-SHOW_EVERY = 2000   # (Tutorial's value 2000)
+EPISODES = 4000     # Each episode lasts a specific time. It's actually how many trials it will attempt.
+SHOW_EVERY = 2000   
 DISCRETE_OS_SIZE = [20] * len(env.observation_space.high)
 discrete_os_win_size = (env.observation_space.high - env.observation_space.low) / DISCRETE_OS_SIZE
 
 # --- randomness/exploration metrics ---
-epsilon = 0.5 # range [0,1] . How randomness you want in its actions. Ie. how exploratory you want that actor. Lower means exploration in fewer episodes.
-# Explanation: maybe with epsilon it takes more time to achieve the goal, but due to more exploration, it may find better solution.
+epsilon = 0.5 # range [0,1] . How much randomness in its actions.
 START_EPSILON_DECAYING = 1
 END_EPSILON_DECAYING = EPISODES // 2    # The episode that stops epsilon decaying
 epsilon_decay_value = epsilon/(END_EPSILON_DECAYING - START_EPSILON_DECAYING)
 
 q_table = np.random.uniform(low=-2, high=0, size=(DISCRETE_OS_SIZE + [env.action_space.n]))
-# EXPLANATION: This depends on the rewards that it's already getting. In this tutorial, it's constantly -1,
-# so we put [-2,0] and 0 will be a perfect reward. Upper boundary (i.e. 0) should not be too high or too low.
-# -- size: we need to store for each position with each action so we need a table 20x20x3 == xspace x yspace x actions_num
 
 # rewards for each episode
 ep_rewards = []
@@ -70,11 +62,10 @@ for episode in range(EPISODES):
             env.render()
         if not done:
             max_future_q = np.max(q_table[new_discrete_state])
-            current_q = q_table[discrete_state + (action,)]     # QUESTION: why comma after action i.e. (action, )
+            current_q = q_table[discrete_state + (action,)]
             # new_q  formula
-            # QUESTION: what's the difference between rt (reward) and q values (I suppose that's reward too.) ??? You can see the equations in pt2 9:06.
             new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
-            q_table[discrete_state+(action,)] = new_q   # update reward for state, action pair. EXPLANATION: New reward based on the outcome of your current action. So if this was a good action being at this state(position) then write down a big reward, so you'll do the same action if you are in this state again.
+            q_table[discrete_state+(action,)] = new_q
         elif new_state[0] >= env.goal_position:
             print(f"We made it on episode {episode}")
             sys.stdout.flush()
